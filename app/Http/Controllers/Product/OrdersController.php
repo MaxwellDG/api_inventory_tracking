@@ -29,7 +29,8 @@ class OrdersController extends Controller
             $request->input('start_date'),
             $request->input('end_date'),
             $request->input('status'),
-            $request->input('page', 1)
+            $request->input('page', 1),
+            $request->input('label')
         );
 
         return response()->json([

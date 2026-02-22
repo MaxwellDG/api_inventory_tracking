@@ -6,7 +6,7 @@ use App\Models\Order;
 
 class OrdersRepository
 {
-    public function getOrders(int $companyId, ?string $startDate = null, ?string $endDate = null, ?string $status = null, int $page = 1)
+    public function getOrders(int $companyId, ?string $startDate = null, ?string $endDate = null, ?string $status = null, int $page = 1, ?string $label = null)
     {
         $query = Order::with(['items', 'user'])
             ->where('company_id', $companyId);
@@ -22,7 +22,11 @@ class OrdersRepository
         if ($status) {
             $query->where('status', $status);
         }
-        
+
+        if ($label) {
+            $query->where('label', 'LIKE', '%' . $label . '%');
+        }
+
         return $query->paginate(25, ['*'], 'page', $page);
     }
 }
