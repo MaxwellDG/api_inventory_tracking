@@ -12,7 +12,15 @@ class CreateOrderRequest extends CompanyScopedRequest
             'items' => 'required|array',
             'items.*.id' => 'required|exists:items,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'label' => 'required|string|max:255',
+            'labels' => 'nullable|array',
+            'labels.*' => ['required', function ($attribute, $value, $fail) {
+                if (!is_int($value) && !is_string($value)) {
+                    $fail("Each label must be an integer ID or a string name.");
+                }
+                if (is_int($value) && !\App\Models\Label::withoutGlobalScopes()->where('id', $value)->exists()) {
+                    $fail("Label with ID {$value} does not exist.");
+                }
+            }],
         ], ['company_id' => 'prohibited']);
     }
 

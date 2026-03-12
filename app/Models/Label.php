@@ -22,7 +22,7 @@ class Label extends BaseModel
 
     public function orders()
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(Order::class, 'order_label', 'label_id', 'order_id');
     }
 
     public function company()

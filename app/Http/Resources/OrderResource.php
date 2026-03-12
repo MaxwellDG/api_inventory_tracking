@@ -15,6 +15,7 @@ class OrderResource extends JsonResource
             'fees' => $this->formatFees(),
             'total' => $this->resource->total,
             'subtotal' => $this->resource->subtotal,
+            'labels' => $this->resource->labels->map(fn($l) => ['id' => $l->id, 'name' => $l->name]),
             'status' => $this->resource->status,
             'receipt_id' => $this->resource->receipt_id,
             'created_at' => $this->resource->created_at,

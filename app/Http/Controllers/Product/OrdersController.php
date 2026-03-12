@@ -30,7 +30,7 @@ class OrdersController extends Controller
             $request->input('end_date'),
             $request->input('status'),
             $request->input('page', 1),
-            $request->input('label')
+            $request->input('label_id')
         );
 
         return response()->json([
@@ -47,7 +47,7 @@ class OrdersController extends Controller
 
     public function show(Order $order)
     {
-        return response()->json(new OrderResource($order->load(['user', 'items'])));
+        return response()->json(new OrderResource($order->load(['user', 'items', 'labels'])));
     }
 
     public function store(CreateOrderRequest $request)

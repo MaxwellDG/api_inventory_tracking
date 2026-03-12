@@ -6,9 +6,9 @@ use App\Models\Order;
 
 class OrdersRepository
 {
-    public function getOrders(int $companyId, ?string $startDate = null, ?string $endDate = null, ?string $status = null, int $page = 1, ?string $label = null)
+    public function getOrders(int $companyId, ?string $startDate = null, ?string $endDate = null, ?string $status = null, int $page = 1, ?int $labelId = null)
     {
-        $query = Order::with(['items', 'user'])
+        $query = Order::with(['items', 'user', 'labels'])
             ->where('company_id', $companyId);
 
         if ($startDate) {
@@ -23,8 +23,8 @@ class OrdersRepository
             $query->where('status', $status);
         }
 
-        if ($label) {
-            $query->where('label', 'LIKE', '%' . $label . '%');
+        if ($labelId) {
+            $query->whereHas('labels', fn($q) => $q->where('labels.id', $labelId));
         }
 
         return $query->paginate(25, ['*'], 'page', $page);

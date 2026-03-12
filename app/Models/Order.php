@@ -12,7 +12,7 @@ class Order extends BaseModel
     protected $primaryKey = 'uuid';
     public $incrementing = false;
     protected $keyType = 'string';
-    protected $fillable = ['user_id', 'total', 'completed_at', 'company_id', 'subtotal', 'status', 'receipt_id', 'label'];
+    protected $fillable = ['user_id', 'total', 'completed_at', 'company_id', 'subtotal', 'status', 'receipt_id'];
     
     protected $casts = [
         'completed_at' => 'datetime',
@@ -54,6 +54,11 @@ class Order extends BaseModel
         return $this->belongsToMany(Fee::class, 'orders_fees', 'order_id', 'fee_id')
                     ->withPivot('value')
                     ->withTimestamps();
+    }
+
+    public function labels()
+    {
+        return $this->belongsToMany(Label::class, 'order_label', 'order_id', 'label_id');
     }
 
     /* 
@@ -143,19 +148,23 @@ class Order extends BaseModel
     public static function createWithItems(int $user_id, array $data)
     {
         $companyId = $data['company_id'];
-        $label = $data['label'] ?? null;
-        
+        $labelIds = collect($data['labels'] ?? [])->map(function ($label) use ($companyId) {
+            if (is_int($label)) {
+                return $label;
+            }
+            return Label::firstOrCreate(['name' => $label, 'company_id' => $companyId])->id;
+        })->all();
+
         // Validate and prepare items
         $prepared = self::validateAndPrepareItems($companyId, $data['items']);
         $items = $prepared['items'];
         $itemsData = $prepared['itemsData'];
-        
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($user_id, $companyId, $label, $items, $itemsData) {
+
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($user_id, $companyId, $labelIds, $items, $itemsData) {
             $order = new static();
             $order->uuid = (string) \Illuminate\Support\Str::uuid();
             $order->user_id = $user_id;
             $order->company_id = $companyId;
-            $order->label = $label;
             $order->status = 'open';
             $order->total = 0;
             $order->subtotal = 0;
@@ -193,7 +202,11 @@ class Order extends BaseModel
                 $order->fees()->attach($fee['fee_id'], ['value' => $fee['value']]);
             }
 
-            return $order->load('user', 'items', 'fees');
+            if (!empty($labelIds)) {
+                $order->labels()->sync($labelIds);
+            }
+
+            return $order->load('user', 'items', 'fees', 'labels');
         });
     }
 
@@ -226,7 +239,7 @@ class Order extends BaseModel
         
         $this->save();
 
-        return $this->load('user', 'items');
+        return $this->load('user', 'items', 'labels');
     }
 
     /**
@@ -296,7 +309,7 @@ class Order extends BaseModel
             $this->total = self::calculateTotal($subtotal, $calculatedFees);
             $this->save();
 
-            return $this->load('user', 'items', 'fees');
+            return $this->load('user', 'items', 'fees', 'labels');
         });
     }
 
@@ -358,7 +371,7 @@ class Order extends BaseModel
             $this->total = self::calculateTotal($subtotal, $calculatedFees);
             $this->save();
 
-            return $this->load('user', 'items', 'fees');
+            return $this->load('user', 'items', 'fees', 'labels');
         });
     }
 }

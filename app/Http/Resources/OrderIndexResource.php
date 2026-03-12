@@ -11,7 +11,7 @@ class OrderIndexResource extends JsonResource
         return [
             'uuid' => $this->resource->uuid,
             'user' => new UserResource($this->resource->user),
-            'label' => $this->resource->label,
+            'labels' => $this->resource->labels->map(fn($l) => ['id' => $l->id, 'name' => $l->name]),
             'subtotal' => $this->resource->subtotal,
             'total' => $this->resource->total,
             'status' => $this->resource->status,
