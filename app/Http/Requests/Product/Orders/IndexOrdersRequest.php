@@ -19,7 +19,8 @@ class IndexOrdersRequest extends FormRequest
             'item_id' => 'nullable|integer|exists:items,id',
             'page' => 'nullable|integer|min:1',
             'status' => 'nullable|string|in:open,pending,completed',
-            'label_id' => 'nullable|integer|exists:labels,id',
+            'label_ids' => 'nullable|array',
+            'label_ids.*' => 'integer|exists:labels,id',
         ];
     }
 
